@@ -13,6 +13,8 @@
  */
 package com.brightcove.zencoder.client;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,6 +30,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -57,9 +60,24 @@ public class ZencoderClient {
     private ObjectMapper mapper;
 
     public ZencoderClient(String api_key) {
+        init(api_key, null, 0);
+    }
+
+    public ZencoderClient(String api_key, String proxy_host, int proxy_port) {
+        init(api_key, proxy_host, proxy_port);
+    }
+
+    private void init(String api_key, String proxy_host, int proxy_port) {
         this.api_key = api_key;
         this.api_url = API_URL;
-        this.rt = new RestTemplate();
+        if (proxy_host != null) {
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+            Proxy proxy= new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy_host, proxy_port));
+            requestFactory.setProxy(proxy);
+            this.rt = new RestTemplate(requestFactory);
+        } else {
+            this.rt = new RestTemplate();
+        }
         this.mapper = createObjectMapper();
     }
 
